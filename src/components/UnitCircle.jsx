@@ -25,6 +25,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 export default function UnitCircle() {
   const { toast } = useToast();
@@ -42,8 +43,9 @@ export default function UnitCircle() {
     sine: true,
     cosine: true,
     tangent: true,
-    showDegrees: true, // Changed to true
+    showDegrees: true,
     showAxes: true,
+    showGiveUp: false,
   });
   
   // Store answers for each angle
@@ -260,44 +262,117 @@ export default function UnitCircle() {
     }
   };
 
+  // Add this new state near the top with other state variables
+  const [checkResults, setCheckResults] = useState({
+    show: false,
+    errors: [],
+    score: { correct: 0, total: 0 }
+  });
+
+  // Add this new Dialog component near the other dialogs
+  const ErrorDialog = ({ results, onClose }) => (
+    <Dialog open={results.show} onOpenChange={onClose}>
+      <DialogContent className="max-w-2xl max-h-[80vh]">
+        <DialogHeader>
+          <DialogTitle>Check Results: {results.score.correct}/{results.score.total}</DialogTitle>
+        </DialogHeader>
+        <ScrollArea className="max-h-[60vh] pr-4">
+          <div className="grid gap-4 py-4">
+            {results.errors.map((error, index) => (
+              <div key={index} className="border-b pb-2">
+                <div className="font-semibold text-red-600">{error.angle}° - {error.field}</div>
+                <div className="grid grid-cols-2 gap-2 mt-1">
+                  <div>Your answer: <span className="font-mono">{error.userValue}</span></div>
+                  <div>Correct: <span className="font-mono">{error.correctValue}</span></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </ScrollArea>
+      </DialogContent>
+    </Dialog>
+  );
+
+  // Modify the checkAllAnswers function
   const checkAllAnswers = () => {
-    const tolerance = 0.01;
+    const tolerance = 0.0001; // Make tolerance stricter
     let correct = 0;
     let total = 0;
     const errors = [];
 
     // Calculate total possible points first
-    const pointsPerAngle = commonAngles.length;
-    if (practiceOptions.coordinates) total += pointsPerAngle * 2; // x and y coordinates
-    if (practiceOptions.radians) total += pointsPerAngle;
-    if (practiceOptions.sine) total += pointsPerAngle;
-    if (practiceOptions.cosine) total += pointsPerAngle;
-    if (practiceOptions.tangent) total += pointsPerAngle;
+    commonAngles.forEach(angle => {
+      if (practiceOptions.coordinates) total += 2;
+      if (practiceOptions.radians) total += 1;
+      if (practiceOptions.sine) total += 1;
+      if (practiceOptions.cosine) total += 1;
+      if (practiceOptions.tangent) total += 1;
+    });
 
-    // Helper function to evaluate expressions with π and √
-    const evaluateExpression = (expr) => {
-      if (!expr) return NaN;
-      
-      // Handle 'undefined' for tangent
-      if (expr.toLowerCase() === 'undefined') return Infinity;
-      
-      // Convert π to Math.PI
-      expr = expr.replace(/π/g, 'Math.PI');
-      
-      // Convert √ to Math.sqrt
-      expr = expr.replace(/√(\d+)/g, 'Math.sqrt($1)');
-      
-      // Handle fractions
-      if (expr.includes('/')) {
-        const [num, den] = expr.split('/');
-        return Number(num) / Number(den);
+    // Helper function to compare values and track errors
+    const compareValues = (userVal, correctVal, field, angle) => {
+      // Special case for undefined tangent
+      if (field === 'Tangent' && (angle === 90 || angle === 270)) {
+        if (userVal.toLowerCase() === 'undefined') {
+          correct++;
+          return true;
+        }
+        errors.push({
+          angle,
+          field,
+          userValue: userVal,
+          correctValue: 'undefined'
+        });
+        return false;
       }
 
-      try {
-        return Number(eval(expr));
-      } catch {
-        return NaN;
+      // Special case for exact zero values
+      if (correctVal === 0 || correctVal === '0') {
+        if (userVal === '0' || userVal === 0 || userVal === '-0') {
+          correct++;
+          return true;
+        }
+        errors.push({
+          angle,
+          field,
+          userValue: userVal || '(empty)',
+          correctValue: '0'
+        });
+        return false;
       }
+
+      // Special case for exact radian matches
+      if (field === 'Radians') {
+        const normalizedUser = userVal.toLowerCase().replace(/\s+/g, '');
+        const normalizedCorrect = formatValue(correctVal).toLowerCase().replace(/\s+/g, '');
+        if (normalizedUser === normalizedCorrect) {
+          correct++;
+          return true;
+        }
+      }
+
+      const evaluatedUser = evaluateExpression(userVal);
+      const evaluatedCorrect = evaluateExpression(correctVal);
+      
+      // Handle case where both values are very close to zero
+      if (Math.abs(evaluatedUser) < tolerance && Math.abs(evaluatedCorrect) < tolerance) {
+        correct++;
+        return true;
+      }
+
+      if (!isNaN(evaluatedUser) && 
+          Math.abs(evaluatedUser - evaluatedCorrect) <= tolerance) {
+        correct++;
+        return true;
+      }
+      
+      errors.push({
+        angle,
+        field,
+        userValue: userVal || '(empty)',
+        correctValue: formatValue(correctVal)
+      });
+      return false;
     };
 
     commonAngles.forEach(angle => {
@@ -305,61 +380,52 @@ export default function UnitCircle() {
       const userVals = answers[angle];
       
       if (!userVals.completed) {
-        errors.push(`${angle}° point not completed`);
+        errors.push({
+          angle,
+          field: 'Point',
+          userValue: 'Not completed',
+          correctValue: 'Required'
+        });
         return;
       }
 
       if (practiceOptions.coordinates) {
-        const userX = evaluateExpression(userVals.coordinates.x);
-        const userY = evaluateExpression(userVals.coordinates.y);
-        
-        if (Math.abs(userX - correctVals.coordinates.x) <= tolerance) correct++;
-        else errors.push(`X coordinate at ${angle}°`);
-        
-        if (Math.abs(userY - correctVals.coordinates.y) <= tolerance) correct++;
-        else errors.push(`Y coordinate at ${angle}°`);
+        compareValues(userVals.coordinates.x, correctVals.coordinates.x, 'X coordinate', angle);
+        compareValues(userVals.coordinates.y, correctVals.coordinates.y, 'Y coordinate', angle);
       }
       
       if (practiceOptions.radians) {
-        const userRadians = evaluateExpression(userVals.radians);
-        if (Math.abs(userRadians - correctVals.radians) <= tolerance) correct++;
-        else errors.push(`Radians at ${angle}°`);
+        compareValues(userVals.radians, correctVals.radians, 'Radians', angle);
       }
       
       if (practiceOptions.sine) {
-        const userSine = evaluateExpression(userVals.sine);
-        if (Math.abs(userSine - correctVals.sine) <= tolerance) correct++;
-        else errors.push(`Sine at ${angle}°`);
+        compareValues(userVals.sine, correctVals.sine, 'Sine', angle);
       }
       
       if (practiceOptions.cosine) {
-        const userCosine = evaluateExpression(userVals.cosine);
-        if (Math.abs(userCosine - correctVals.cosine) <= tolerance) correct++;
-        else errors.push(`Cosine at ${angle}°`);
+        compareValues(userVals.cosine, correctVals.cosine, 'Cosine', angle);
       }
       
       if (practiceOptions.tangent) {
-        // Special case for tangent at 90° and 270°
-        if ((angle === 90 || angle === 270) && 
-            userVals.tangent.toLowerCase() === 'undefined') {
-          correct++;
-        } else {
-          const userTangent = evaluateExpression(userVals.tangent);
-          if (Math.abs(userTangent - correctVals.tangent) <= tolerance) {
-            correct++;
-          } else {
-            errors.push(`Tangent at ${angle}°`);
-          }
-        }
+        compareValues(userVals.tangent, correctVals.tangent, 'Tangent', angle);
       }
     });
 
+    // Set the results in state but don't show the dialog
+    setCheckResults({
+      show: false,
+      errors,
+      score: { correct, total }
+    });
+
+    // Show the toast that can be clicked
     toast({
       title: `Score: ${correct}/${total}`,
       description: errors.length > 0 
-        ? `Errors: ${errors.slice(0, 3).join(', ')}${errors.length > 3 ? ` and ${errors.length - 3} more...` : ''}`
+        ? "Click here to see detailed results"
         : "Perfect! All answers are correct!",
       variant: errors.length > 0 ? "destructive" : "default",
+      onClick: errors.length > 0 ? () => setCheckResults(prev => ({ ...prev, show: true })) : undefined,
     });
   };
 
@@ -393,8 +459,8 @@ export default function UnitCircle() {
       0: "0",
       1: "1",
       "-1": "-1",
-      0.5: "½",
-      "-0.5": "-½",
+      0.5: "1/2",
+      "-0.5": "-1/2",
       
       // 30° and 150° values
       0.8660254037844386: "√3/2",
@@ -497,6 +563,154 @@ export default function UnitCircle() {
       setShowReferenceWarning(true);
     } else {
       router.push('/reference');
+    }
+  };
+
+  const handleGiveUp = () => {
+    const correctAnswers = getCorrectAnswers(selectedAngle);
+    
+    setAnswers(prev => ({
+      ...prev,
+      [selectedAngle]: {
+        ...prev[selectedAngle],
+        angle: selectedAngle.toString(),
+        coordinates: {
+          x: formatValue(correctAnswers.coordinates.x),
+          y: formatValue(correctAnswers.coordinates.y)
+        },
+        radians: formatValue(correctAnswers.radians),
+        sine: formatValue(correctAnswers.sine),
+        cosine: formatValue(correctAnswers.cosine),
+        tangent: selectedAngle === 90 || selectedAngle === 270 
+          ? 'undefined' 
+          : formatValue(correctAnswers.tangent),
+        completed: true
+      }
+    }));
+
+    toast({
+      title: "Answers Filled",
+      description: "The correct answers have been filled in for you.",
+      variant: "default",
+    });
+  };
+
+  // Add this helper function after formatValue
+  const evaluateExpression = (expr) => {
+    if (!expr) return NaN;
+    
+    // Convert to string first and trim
+    let processedExpr = expr.toString().trim();
+    
+    // Handle 'undefined' for tangent
+    if (processedExpr.toLowerCase() === 'undefined') return Infinity;
+
+    // Special exact values mapping with variations
+    const specialValues = {
+      // Basic values
+      '1': 1, '-1': -1, '0': 0,
+      
+      // Halves
+      '1/2': 0.5, '-1/2': -0.5,
+      '.5': 0.5, '-.5': -0.5,
+      '0.5': 0.5, '-0.5': -0.5,
+      
+      // √3/2 variations
+      '√3/2': Math.sqrt(3)/2,
+      '-√3/2': -Math.sqrt(3)/2,
+      'sqrt(3)/2': Math.sqrt(3)/2,
+      '-sqrt(3)/2': -Math.sqrt(3)/2,
+      '(√3)/2': Math.sqrt(3)/2,
+      '-(√3)/2': -Math.sqrt(3)/2,
+      
+      // √2/2 variations
+      '√2/2': Math.sqrt(2)/2,
+      '-√2/2': -Math.sqrt(2)/2,
+      'sqrt(2)/2': Math.sqrt(2)/2,
+      '-sqrt(2)/2': -Math.sqrt(2)/2,
+      '(√2)/2': Math.sqrt(2)/2,
+      '-(√2)/2': -Math.sqrt(2)/2,
+      
+      // √3 variations
+      '√3': Math.sqrt(3),
+      '-√3': -Math.sqrt(3),
+      'sqrt(3)': Math.sqrt(3),
+      '-sqrt(3)': -Math.sqrt(3),
+      
+      // √3/3 variations
+      '√3/3': Math.sqrt(3)/3,
+      '-√3/3': -Math.sqrt(3)/3,
+      'sqrt(3)/3': Math.sqrt(3)/3,
+      '-sqrt(3)/3': -Math.sqrt(3)/3,
+      
+      // π variations
+      'π': Math.PI,
+      'pi': Math.PI,
+      'π/6': Math.PI/6,
+      'pi/6': Math.PI/6,
+      'π/4': Math.PI/4,
+      'pi/4': Math.PI/4,
+      'π/3': Math.PI/3,
+      'pi/3': Math.PI/3,
+      'π/2': Math.PI/2,
+      'pi/2': Math.PI/2,
+      '2π/3': (2*Math.PI)/3,
+      '2pi/3': (2*Math.PI)/3,
+      '3π/4': (3*Math.PI)/4,
+      '3pi/4': (3*Math.PI)/4,
+      '5π/6': (5*Math.PI)/6,
+      '5pi/6': (5*Math.PI)/6,
+      '7π/6': (7*Math.PI)/6,
+      '7pi/6': (7*Math.PI)/6,
+      '4π/3': (4*Math.PI)/3,
+      '4pi/3': (4*Math.PI)/3,
+      '3π/2': (3*Math.PI)/2,
+      '3pi/2': (3*Math.PI)/2,
+      '5π/3': (5*Math.PI)/3,
+      '5pi/3': (5*Math.PI)/3,
+      '7π/4': (7*Math.PI)/4,
+      '7pi/4': (7*Math.PI)/4,
+      '11π/6': (11*Math.PI)/6,
+      '11pi/6': (11*Math.PI)/6,
+      '2π': 2*Math.PI,
+      '2pi': 2*Math.PI
+    };
+
+    // Remove spaces from the expression
+    processedExpr = processedExpr.replace(/\s+/g, '');
+
+    // Check for exact special values first
+    if (specialValues.hasOwnProperty(processedExpr)) {
+      return specialValues[processedExpr];
+    }
+
+    // Convert π to Math.PI
+    processedExpr = processedExpr.replace(/π|pi/g, 'Math.PI');
+    
+    // Convert √ and sqrt to Math.sqrt
+    processedExpr = processedExpr
+      .replace(/√(\d+)/g, 'Math.sqrt($1)')
+      .replace(/sqrt\((\d+)\)/g, 'Math.sqrt($1)');
+    
+    // Handle fractions
+    if (processedExpr.includes('/')) {
+      const [num, den] = processedExpr.split('/').map(part => {
+        try {
+          return eval(part);
+        } catch {
+          return NaN;
+        }
+      });
+      if (!isNaN(num) && !isNaN(den) && den !== 0) {
+        return Number((num / den).toFixed(8));
+      }
+      return NaN;
+    }
+
+    try {
+      return Number(eval(processedExpr).toFixed(8));
+    } catch {
+      return NaN;
     }
   };
 
@@ -741,6 +955,16 @@ export default function UnitCircle() {
               />
             </div>
 
+            {practiceOptions.showGiveUp && (
+              <Button 
+                variant="outline" 
+                onClick={handleGiveUp}
+                className="bg-red-50 hover:bg-red-100 text-red-600 hover:text-red-700"
+              >
+                Give Up - Show Answers
+              </Button>
+            )}
+
             <Button onClick={() => {
               if (practiceOptions.showDegrees &&
                   (!answers[selectedAngle].angle || 
@@ -779,6 +1003,16 @@ export default function UnitCircle() {
                   checked={practiceOptions.showAxes}
                   onCheckedChange={(checked) => 
                     setPracticeOptions(prev => ({ ...prev, showAxes: checked }))
+                  }
+                />
+              </div>
+              <div className="flex items-center justify-between mt-3">
+                <Label htmlFor="showGiveUp">Show Give Up Button</Label>
+                <Switch
+                  id="showGiveUp"
+                  checked={practiceOptions.showGiveUp}
+                  onCheckedChange={(checked) => 
+                    setPracticeOptions(prev => ({ ...prev, showGiveUp: checked }))
                   }
                 />
               </div>
@@ -870,6 +1104,11 @@ export default function UnitCircle() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <ErrorDialog 
+        results={checkResults} 
+        onClose={() => setCheckResults(prev => ({ ...prev, show: false }))}
+      />
     </div>
   );
 }

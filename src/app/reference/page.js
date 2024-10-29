@@ -243,11 +243,6 @@ const ReferenceCircle = () => {
                 }}
               >
                 <div className="flex flex-col items-start bg-white/90 dark:bg-gray-950/90 rounded-md px-2 py-1 border border-gray-200 dark:border-gray-800 shadow-sm">
-                  {/* Angle */}
-                  <div className="flex items-center gap-1 border-b border-gray-200 dark:border-gray-700 w-full pb-1 mb-1">
-                    <span className="font-semibold text-blue-600 dark:text-blue-400">{angle}°</span>
-                  </div>
-                  
                   {/* Coordinates */}
                   <div className="flex items-center gap-1 border-b border-gray-200 dark:border-gray-700 w-full pb-1 mb-1">
                     <span className="font-semibold text-gray-600 dark:text-gray-400">Point:</span>
