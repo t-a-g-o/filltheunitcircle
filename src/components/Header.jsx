@@ -13,10 +13,28 @@ export default function Header() {
             <h1 className="text-2xl font-bold text-foreground">
               Unit Circle Practice
             </h1>
-            <span className="text-sm text-muted-foreground ml-0.5">.tago.works</span>
+            <span className="text-xs font-semibold text-muted-foreground ml-0.5">.tago.works</span>
           </div>
         </Link>
-        <ThemeToggle />
+        <div className="flex items-center gap-4">
+          <Link
+            href="https://github.com/t-a-g-o/filltheunitcircle"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            View Source
+          </Link>
+          <Link
+            href="https://tago.works"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            tagoWorks
+          </Link>
+          <ThemeToggle />
+        </div>
       </div>
     </nav>
   );

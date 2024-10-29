@@ -26,6 +26,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { HelpCircle } from "lucide-react";
 
 export default function UnitCircle() {
   const { toast } = useToast();
@@ -46,6 +48,7 @@ export default function UnitCircle() {
     showDegrees: true,
     showAxes: true,
     showGiveUp: false,
+    showRadiusLines: false,
   });
   
   // Store answers for each angle
@@ -734,6 +737,21 @@ export default function UnitCircle() {
               </>
             )}
             
+            {/* Radius Lines */}
+            {practiceOptions.showRadiusLines && commonAngles.map(angle => {
+              const point = getPointPosition(angle);
+              return (
+                <div
+                  key={`radius-${angle}`}
+                  className="absolute top-1/2 left-1/2 origin-left h-[1px] bg-gray-200"
+                  style={{
+                    width: '50%',
+                    transform: `rotate(${-angle}deg)`,
+                  }}
+                />
+              );
+            })}
+            
             {/* Common angle points */}
             {commonAngles.map(angle => {
               const point = getPointPosition(angle);
@@ -854,15 +872,34 @@ export default function UnitCircle() {
       <Dialog open={openDialog} onOpenChange={setOpenDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>
-              {selectedAngle === null ? 'Loading...' :
-                !practiceOptions.showDegrees
-                  ? `Point at ${selectedAngle}°`
-                  : answers[selectedAngle]?.angle 
-                    ? `Point at ${answers[selectedAngle].angle}°`
-                    : 'Enter angle for this point'
-              }
-            </DialogTitle>
+            <div className="flex items-center gap-2">
+              <DialogTitle>
+                {selectedAngle === null ? 'Loading...' :
+                  !practiceOptions.showDegrees
+                    ? `Point at ${selectedAngle}°`
+                    : answers[selectedAngle]?.angle 
+                      ? `Point at ${answers[selectedAngle].angle}°`
+                      : 'Enter angle for this point'
+                }
+              </DialogTitle>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-6 w-6">
+                      <HelpCircle className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-sm">
+                    <p>You can type:</p>
+                    <ul className="list-disc list-inside">
+                      <li>&apos;pi&apos; or &apos;π&apos; for π</li>
+                      <li>&apos;root&apos;, &apos;sqrt&apos;, or &apos;√&apos; for √</li>
+                      <li>Example: &apos;pi/6&apos; or &apos;root(3)/2&apos;</li>
+                    </ul>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
           </DialogHeader>
           
           <div className="grid gap-4 py-4">
@@ -1003,6 +1040,16 @@ export default function UnitCircle() {
                   checked={practiceOptions.showAxes}
                   onCheckedChange={(checked) => 
                     setPracticeOptions(prev => ({ ...prev, showAxes: checked }))
+                  }
+                />
+              </div>
+              <div className="flex items-center justify-between mt-3">
+                <Label htmlFor="showRadiusLines">Show Radius Lines</Label>
+                <Switch
+                  id="showRadiusLines"
+                  checked={practiceOptions.showRadiusLines}
+                  onCheckedChange={(checked) => 
+                    setPracticeOptions(prev => ({ ...prev, showRadiusLines: checked }))
                   }
                 />
               </div>
