@@ -1,26 +1,12 @@
-import Image from "next/image";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
+import { Card, CardContent } from "@/components/ui/card";
 import UnitCircle from '@/components/UnitCircle';
 import { Toaster } from "@/components/ui/toaster";
-import { ThemeToggle } from "@/components/ThemeToggle";
+import Header from '@/components/Header';
 
 export default function Home() {
   return (
     <div className="min-h-screen bg-background">
-      <nav className="border-b bg-card shadow-sm">
-        <div className="max-w-4xl mx-auto px-8 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
-              <span className="text-primary-foreground font-bold">π</span>
-            </div>
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-              Unit Circle Practice
-            </h1>
-          </div>
-          <ThemeToggle />
-        </div>
-      </nav>
+      <Header />
       
       <main className="max-w-4xl mx-auto p-8">
         <div className="space-y-8">

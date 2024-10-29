@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import Header from '@/components/Header';
 
 const commonAngles = [0, 30, 45, 60, 90, 120, 135, 150, 180, 210, 225, 240, 270, 300, 315, 330];
 
@@ -154,8 +155,8 @@ const ReferenceCircle = () => {
     <div className="w-full max-w-[1000px] h-[1000px] mx-auto p-16 relative">
       <div className="w-full h-full relative border-2 border-gray-200 dark:border-gray-700 rounded-full">
         {/* Axes */}
-        <div className="absolute top-1/2 left-0 w-full h-[2px] bg-gray-300" />
-        <div className="absolute top-0 left-1/2 w-[2px] h-full bg-gray-300" />
+        <div className="absolute top-1/2 left-0 w-full h-[2px] bg-gray-300/50" />
+        <div className="absolute top-0 left-1/2 w-[2px] h-full bg-gray-300/50" />
         
         {commonAngles.map((angle, index) => {
           const point = getPointPosition(angle);
@@ -188,14 +189,35 @@ const ReferenceCircle = () => {
 
           return (
             <div key={angle}>
-              {/* Radius Line */}
+              {/* Radius Line with Angle Label */}
               <div 
-                className="absolute top-1/2 left-1/2 origin-left h-[1px] bg-gray-300 dark:bg-gray-600"
+                className="absolute top-1/2 left-1/2 origin-left h-[1px] bg-gray-300/40 dark:bg-gray-600/40 hover:bg-blue-400/40 dark:hover:bg-blue-400/40 transition-colors duration-200"
                 style={{
                   width: '47%',
                   transform: `rotate(${-angle}deg)`,
                 }}
-              />
+              >
+                <div 
+                  className="absolute text-xs font-medium bg-white/90 dark:bg-gray-950/90 px-1.5 py-0.5 rounded-full border border-gray-200 dark:border-gray-800 shadow-sm"
+                  style={{
+                    left: '25%',
+                    transform: `
+                      translate(-50%, -50%) 
+                      rotate(${angle > 90 && angle < 270 ? 180 : 0}deg)
+                    `,
+                    color: 'rgb(37 99 235)', // blue-600
+                    minWidth: '28px',
+                    textAlign: 'center',
+                  }}
+                >
+                  <div className="flex gap-1">
+                    <span>{angle}°</span>
+                    <span className="text-gray-500 dark:text-gray-400">
+                      {formatValue(values.radians)}
+                    </span>
+                  </div>
+                </div>
+              </div>
 
               {/* Point */}
               <div 
@@ -207,7 +229,7 @@ const ReferenceCircle = () => {
                   zIndex: 10,
                 }}
               >
-                <div className="w-2 h-2 rounded-full bg-blue-500 dark:bg-blue-400 ring-1 ring-white dark:ring-gray-950" />
+                <div className="w-2 h-2 rounded-full bg-blue-500 dark:bg-blue-400 ring-2 ring-white dark:ring-gray-950 shadow-md" />
               </div>
 
               {/* Combined Info Box */}
@@ -224,7 +246,6 @@ const ReferenceCircle = () => {
                   {/* Angle */}
                   <div className="flex items-center gap-1 border-b border-gray-200 dark:border-gray-700 w-full pb-1 mb-1">
                     <span className="font-semibold text-blue-600 dark:text-blue-400">{angle}°</span>
-                    <span className="text-gray-500 dark:text-gray-400">({formatValue(values.radians)})</span>
                   </div>
                   
                   {/* Coordinates */}
@@ -267,134 +288,138 @@ export default function ReferencePage() {
   const [showVisual, setShowVisual] = useState(true);
 
   return (
-    <div className="container mx-auto py-8 space-y-8">
-      <h1 className="text-4xl font-bold mb-6">Unit Circle Reference</h1>
+    <div className="min-h-screen bg-background">
+      <Header />
       
-      {/* Introduction */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Understanding the Unit Circle</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-gray-700 dark:text-gray-300">
-            The unit circle is a circle with a radius of 1 unit, centered at the origin (0,0) of a coordinate plane. 
-            It's a fundamental tool in trigonometry that helps us understand the relationships between angles and their 
-            trigonometric functions.
-          </p>
-        </CardContent>
-      </Card>
-
-      {/* Key Concepts */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Key Concepts</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div>
-            <h3 className="font-semibold mb-2">Coordinates (x, y)</h3>
-            <p className="text-gray-700 dark:text-gray-300">
-              • The x-coordinate represents the cosine of the angle<br />
-              • The y-coordinate represents the sine of the angle<br />
-              • For any point on the unit circle: x² + y² = 1
-            </p>
-          </div>
-          
-          <div>
-            <h3 className="font-semibold mb-2">Radians vs Degrees</h3>
-            <p className="text-gray-700 dark:text-gray-300">
-              • Full circle: 360° = 2π radians<br />
-              • Half circle: 180° = π radians<br />
-              • Quarter circle: 90° = π/2 radians<br />
-              • To convert: radians = degrees × (π/180)
-            </p>
-          </div>
-
-          <div>
-            <h3 className="font-semibold mb-2">Special Triangles</h3>
-            <p className="text-gray-700 dark:text-gray-300">
-              • 30-60-90 triangle: sides ratio 1 : √3 : 2<br />
-              • 45-45-90 triangle: sides ratio 1 : 1 : √2
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Visual Toggle */}
-      <div className="flex items-center gap-2">
-        <Label htmlFor="showVisual">Show Visual Reference</Label>
-        <Switch
-          id="showVisual"
-          checked={showVisual}
-          onCheckedChange={setShowVisual}
-        />
-      </div>
-
-      {/* Visual Reference */}
-      {showVisual && (
+      <div className="container mx-auto py-8 space-y-8">
+        <h1 className="text-4xl font-bold mb-6">Unit Circle Reference</h1>
+        
+        {/* Introduction */}
         <Card>
-          <CardContent className="p-4">
-            <ReferenceCircle />
+          <CardHeader>
+            <CardTitle>Understanding the Unit Circle</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-gray-700 dark:text-gray-300">
+              The unit circle is a circle with a radius of 1 unit, centered at the origin (0,0) of a coordinate plane. 
+              It's a fundamental tool in trigonometry that helps us understand the relationships between angles and their 
+              trigonometric functions.
+            </p>
           </CardContent>
         </Card>
-      )}
 
-      {/* Reference Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Common Angles Reference Table</CardTitle>
-        </CardHeader>
-        <CardContent className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b">
-                <th className="p-2">Angle (degrees)</th>
-                <th className="p-2">Radians</th>
-                <th className="p-2">Coordinates (x, y)</th>
-                <th className="p-2">Sine</th>
-                <th className="p-2">Cosine</th>
-                <th className="p-2">Tangent</th>
-              </tr>
-            </thead>
-            <tbody>
-              {commonAngles.map(angle => {
-                const values = getCorrectAnswers(angle);
-                return (
-                  <tr key={angle} className="border-b">
-                    <td className="p-2 text-center">{angle}°</td>
-                    <td className="p-2 text-center">{formatValue(values.radians)}</td>
-                    <td className="p-2 text-center">
-                      ({formatValue(values.coordinates.x)}, {formatValue(values.coordinates.y)})
-                    </td>
-                    <td className="p-2 text-center">{formatValue(values.sine)}</td>
-                    <td className="p-2 text-center">{formatValue(values.cosine)}</td>
-                    <td className="p-2 text-center">
-                      {angle === 90 || angle === 270 ? 'undefined' : formatValue(values.tangent)}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </CardContent>
-      </Card>
+        {/* Key Concepts */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Key Concepts</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <h3 className="font-semibold mb-2">Coordinates (x, y)</h3>
+              <p className="text-gray-700 dark:text-gray-300">
+                • The x-coordinate represents the cosine of the angle<br />
+                • The y-coordinate represents the sine of the angle<br />
+                • For any point on the unit circle: x² + y² = 1
+              </p>
+            </div>
+            
+            <div>
+              <h3 className="font-semibold mb-2">Radians vs Degrees</h3>
+              <p className="text-gray-700 dark:text-gray-300">
+                • Full circle: 360° = 2π radians<br />
+                • Half circle: 180° = π radians<br />
+                • Quarter circle: 90° = π/2 radians<br />
+                • To convert: radians = degrees × (π/180)
+              </p>
+            </div>
 
-      {/* Tips and Tricks */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Tips and Tricks</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div>
-            <h3 className="font-semibold mb-2">Memorization Patterns</h3>
-            <ul className="list-disc pl-6 space-y-2 text-gray-700 dark:text-gray-300">
-              <li>Values repeat every 90° with alternating signs</li>
-              <li>Sine and cosine values are never greater than 1 or less than -1</li>
-              <li>Sine values in quadrant I match cosine values in quadrant II</li>
-              <li>The signs follow the ASTC rule (All, Sine, Tangent, Cosine)</li>
-            </ul>
-          </div>
-        </CardContent>
-      </Card>
+            <div>
+              <h3 className="font-semibold mb-2">Special Triangles</h3>
+              <p className="text-gray-700 dark:text-gray-300">
+                • 30-60-90 triangle: sides ratio 1 : √3 : 2<br />
+                • 45-45-90 triangle: sides ratio 1 : 1 : √2
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Visual Toggle */}
+        <div className="flex items-center gap-2">
+          <Label htmlFor="showVisual">Show Visual Reference</Label>
+          <Switch
+            id="showVisual"
+            checked={showVisual}
+            onCheckedChange={setShowVisual}
+          />
+        </div>
+
+        {/* Visual Reference */}
+        {showVisual && (
+          <Card>
+            <CardContent className="p-4">
+              <ReferenceCircle />
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Reference Table */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Common Angles Reference Table</CardTitle>
+          </CardHeader>
+          <CardContent className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b">
+                  <th className="p-2">Angle (degrees)</th>
+                  <th className="p-2">Radians</th>
+                  <th className="p-2">Coordinates (x, y)</th>
+                  <th className="p-2">Sine</th>
+                  <th className="p-2">Cosine</th>
+                  <th className="p-2">Tangent</th>
+                </tr>
+              </thead>
+              <tbody>
+                {commonAngles.map(angle => {
+                  const values = getCorrectAnswers(angle);
+                  return (
+                    <tr key={angle} className="border-b">
+                      <td className="p-2 text-center">{angle}°</td>
+                      <td className="p-2 text-center">{formatValue(values.radians)}</td>
+                      <td className="p-2 text-center">
+                        ({formatValue(values.coordinates.x)}, {formatValue(values.coordinates.y)})
+                      </td>
+                      <td className="p-2 text-center">{formatValue(values.sine)}</td>
+                      <td className="p-2 text-center">{formatValue(values.cosine)}</td>
+                      <td className="p-2 text-center">
+                        {angle === 90 || angle === 270 ? 'undefined' : formatValue(values.tangent)}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </CardContent>
+        </Card>
+
+        {/* Tips and Tricks */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Tips and Tricks</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <h3 className="font-semibold mb-2">Memorization Patterns</h3>
+              <ul className="list-disc pl-6 space-y-2 text-gray-700 dark:text-gray-300">
+                <li>Values repeat every 90° with alternating signs</li>
+                <li>Sine and cosine values are never greater than 1 or less than -1</li>
+                <li>Sine values in quadrant I match cosine values in quadrant II</li>
+                <li>The signs follow the ASTC rule (All, Sine, Tangent, Cosine)</li>
+              </ul>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 } 

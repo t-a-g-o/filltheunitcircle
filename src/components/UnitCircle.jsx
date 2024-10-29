@@ -15,6 +15,16 @@ import {
 import { useToast } from "@/components/hooks/use-toast";
 import { Settings } from "lucide-react";
 import { useRouter } from 'next/navigation';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export default function UnitCircle() {
   const { toast } = useToast();
@@ -162,6 +172,14 @@ export default function UnitCircle() {
     }));
   };
 
+  const [autoAdvance, setAutoAdvance] = useState(false);
+
+  const getNextAngle = (currentAngle) => {
+    const index = commonAngles.indexOf(currentAngle);
+    // Go counter-clockwise (next higher angle)
+    return index === commonAngles.length - 1 ? commonAngles[0] : commonAngles[index + 1];
+  };
+
   const handleSaveAnswers = () => {
     const currentAnswers = answers[selectedAngle];
     const emptyFields = [];
@@ -232,7 +250,14 @@ export default function UnitCircle() {
         completed: true
       }
     }));
-    setOpenDialog(false);
+
+    // If autoAdvance is enabled, move to next point
+    if (autoAdvance) {
+      const nextAngle = getNextAngle(selectedAngle);
+      setSelectedAngle(nextAngle);
+    } else {
+      setOpenDialog(false);
+    }
   };
 
   const checkAllAnswers = () => {
@@ -465,6 +490,16 @@ export default function UnitCircle() {
 
   const router = useRouter();
 
+  const [showReferenceWarning, setShowReferenceWarning] = useState(false);
+
+  const handleReferenceClick = () => {
+    if (Object.values(answers).some(a => a.completed)) {
+      setShowReferenceWarning(true);
+    } else {
+      router.push('/reference');
+    }
+  };
+
   return (
     <div className="w-full">
       <Card>
@@ -581,7 +616,7 @@ export default function UnitCircle() {
             <Button
               variant="outline"
               size="icon"
-              onClick={() => router.push('/reference')}
+              onClick={handleReferenceClick}
               className="px-2"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
@@ -697,8 +732,17 @@ export default function UnitCircle() {
               )}
             </div>
 
+            <div className="flex items-center justify-between space-x-2">
+              <Label htmlFor="auto-advance">Auto-advance to next point</Label>
+              <Switch
+                id="auto-advance"
+                checked={autoAdvance}
+                onCheckedChange={setAutoAdvance}
+              />
+            </div>
+
             <Button onClick={() => {
-              if (practiceOptions.showDegrees && // Flipped condition
+              if (practiceOptions.showDegrees &&
                   (!answers[selectedAngle].angle || 
                    isNaN(answers[selectedAngle].angle) ||
                    Number(answers[selectedAngle].angle) !== selectedAngle)) {
@@ -809,6 +853,23 @@ export default function UnitCircle() {
           </div>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={showReferenceWarning} onOpenChange={setShowReferenceWarning}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>View Reference Circle?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Going to the reference page will show you a completed circle. Your current progress will not be saved.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => router.push('/reference')}>
+              Continue
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
