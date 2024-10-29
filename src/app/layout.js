@@ -1,5 +1,7 @@
 import localFont from "next/font/local";
+import { ThemeProvider } from "@/components/theme-provider";
 import "./globals.css";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -41,11 +43,42 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col`}
       >
-        {children}
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <main className="flex-1">
+            {children}
+          </main>
+          <footer className="border-t py-4 px-6">
+            <div className="container mx-auto flex justify-between items-center text-sm text-muted-foreground">
+              <div>
+                Developed with <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block bottom-2"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg> by <a href="https://tago.works"
+                  className="hover:text-foreground transition-all duration-200 opacity-80 hover:opacity-100 hover:underline decoration-2 underline-offset-4" 
+                  target="_blank" 
+                  rel="noopener noreferrer">tago</a>
+              </div>
+              <div className="space-x-6 flex items-center">
+                <ThemeToggle />
+                <a href="https://github.com/t-a-g-o/filltheunitcircle" 
+                  className="hover:text-foreground transition-all duration-200 opacity-80 hover:opacity-100 hover:underline decoration-2 underline-offset-4" 
+                  target="_blank" 
+                  rel="noopener noreferrer">GitHub</a>
+                <span>|</span>
+                <a href="https://github.com/t-a-g-o/filltheunitcircle/issues" 
+                  className="hover:text-foreground transition-all duration-200 opacity-80 hover:opacity-100 hover:underline decoration-2 underline-offset-4" 
+                  target="_blank" 
+                  rel="noopener noreferrer">Report Issues</a>
+              </div>
+            </div>
+          </footer>
+        </ThemeProvider>
       </body>
     </html>
   );

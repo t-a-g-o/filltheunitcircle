@@ -894,7 +894,7 @@ export default function UnitCircle() {
                     <ul className="list-disc list-inside">
                       <li>&apos;pi&apos; or &apos;π&apos; for π</li>
                       <li>&apos;root&apos;, &apos;sqrt&apos;, or &apos;√&apos; for √</li>
-                      <li>Example: &apos;pi/6&apos; or &apos;root(3)/2&apos;</li>
+                      <li>Example: &apos;5pi/6&apos; or &apos;root3/2&apos;</li>
                     </ul>
                   </TooltipContent>
                 </Tooltip>
