@@ -19,7 +19,7 @@ export default function Home() {
                 Understanding the Unit Circle
               </h1>
               <p className="text-muted-foreground mb-6">
-                The unit circle is a fundamental concept in trigonometry and mathematics. It's a circle with a radius of 1 unit, centered at the origin (0,0) of a coordinate plane. This simple but powerful tool helps us:
+                The unit circle is a fundamental concept in trigonometry and mathematics. It&apos;s a circle with a radius of 1 unit, centered at the origin (0,0) of a coordinate plane. This simple but powerful tool helps us:
               </p>
               <ul className="list-disc list-inside space-y-2 text-muted-foreground mb-6">
                 <li>Visualize trigonometric functions (sine, cosine, tangent)</li>
@@ -83,7 +83,7 @@ export default function Home() {
                   The project continues to evolve based on student needs and suggestions. Every feature was carefully designed to help others understand and master the unit circle, from interactive practice to comprehensive reference materials.
                 </p>
                 <p className="text-center text-sm italic">
-                  No ads, no paypwalls - just a simple desire to help other students master the unit circle.
+                  No ads, no paywalls - just a simple desire to help other students master the unit circle.
                 </p>
               </div>
             </CardContent>

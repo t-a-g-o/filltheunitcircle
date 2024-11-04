@@ -1222,7 +1222,7 @@ export default function UnitCircle() {
               <div className="pl-7">
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
-                    <Label htmlFor="showGiveUp">Show "Give Up" Option</Label>
+                    <Label htmlFor="showGiveUp">Show &quot;Give Up&quot; Option</Label>
                     <p className="text-[0.8rem] text-muted-foreground">Display answers when stuck</p>
                   </div>
                   <Switch
