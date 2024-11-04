@@ -28,6 +28,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { HelpCircle } from "lucide-react";
+import { Eye, Brain, Sparkles, Settings2 } from "lucide-react";
 
 export default function UnitCircle() {
   const { toast } = useToast();
@@ -49,6 +50,7 @@ export default function UnitCircle() {
     showAxes: true,
     showGiveUp: false,
     showRadiusLines: false,
+    showAdjacentLines: false,
   });
   
   // Store answers for each angle
@@ -717,6 +719,31 @@ export default function UnitCircle() {
     }
   };
 
+  // Add this helper function to count enabled practice values
+  const getEnabledPracticeValuesCount = () => {
+    return [
+      practiceOptions.coordinates,
+      practiceOptions.radians,
+      practiceOptions.sine,
+      practiceOptions.cosine,
+      practiceOptions.tangent,
+      practiceOptions.showDegrees
+    ].filter(Boolean).length;
+  };
+
+  // Add this handler for practice value toggles
+  const handlePracticeValueToggle = (value, checked) => {
+    if (!checked && getEnabledPracticeValuesCount() <= 1) {
+      toast({
+        title: "Cannot Disable",
+        description: "You must have at least one practice value enabled.",
+        variant: "destructive",
+      });
+      return;
+    }
+    setPracticeOptions(prev => ({ ...prev, [value]: checked }));
+  };
+
   return (
     <div className="w-full">
       <Card>
@@ -747,6 +774,30 @@ export default function UnitCircle() {
                   style={{
                     width: '50%',
                     transform: `rotate(${-angle}deg)`,
+                  }}
+                />
+              );
+            })}
+            
+            {/* Adjacent Lines */}
+            {practiceOptions.showAdjacentLines && commonAngles.map(angle => {
+              const point = getPointPosition(angle);
+              const radius = 50;
+              
+              // Calculate exact positions
+              const exactX = 50 + (radius * point.x);
+              const exactY = 50 - (radius * point.y);
+              
+              return (
+                <div
+                  key={`adjacent-${angle}`}
+                  className="absolute bg-gray-200"
+                  style={{
+                    left: `${exactX}%`,
+                    top: '50%',
+                    width: '1px',
+                    height: `${Math.abs(50 - exactY)}%`,
+                    transform: `translateX(-50%) ${exactY < 50 ? 'translateY(-100%)' : ''}`,
                   }}
                 />
               );
@@ -1024,108 +1075,161 @@ export default function UnitCircle() {
 
       {/* Options Dialog */}
       <Dialog open={openOptionsDialog} onOpenChange={setOpenOptionsDialog}>
-        <DialogContent>
+        <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Practice Options</DialogTitle>
+            <DialogTitle className="flex items-center gap-2 text-lg">
+              <Settings2 className="h-5 w-5" />
+              Practice Options
+            </DialogTitle>
           </DialogHeader>
           
           <div className="grid gap-6 py-4">
             {/* Visual Options */}
-            <div>
-              <h3 className="text-sm font-semibold mb-3">Visual Options</h3>
-              <div className="flex items-center justify-between">
-                <Label htmlFor="showAxes">Show Axes</Label>
-                <Switch
-                  id="showAxes"
-                  checked={practiceOptions.showAxes}
-                  onCheckedChange={(checked) => 
-                    setPracticeOptions(prev => ({ ...prev, showAxes: checked }))
-                  }
-                />
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 border-b pb-2">
+                <Eye className="h-5 w-5 text-muted-foreground" />
+                <h3 className="font-medium">Visual Helpers</h3>
               </div>
-              <div className="flex items-center justify-between mt-3">
-                <Label htmlFor="showRadiusLines">Show Radius Lines</Label>
-                <Switch
-                  id="showRadiusLines"
-                  checked={practiceOptions.showRadiusLines}
-                  onCheckedChange={(checked) => 
-                    setPracticeOptions(prev => ({ ...prev, showRadiusLines: checked }))
-                  }
-                />
-              </div>
-              <div className="flex items-center justify-between mt-3">
-                <Label htmlFor="showGiveUp">Show Give Up Button</Label>
-                <Switch
-                  id="showGiveUp"
-                  checked={practiceOptions.showGiveUp}
-                  onCheckedChange={(checked) => 
-                    setPracticeOptions(prev => ({ ...prev, showGiveUp: checked }))
-                  }
-                />
+              
+              <div className="grid gap-4 pl-7">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="showAxes">Coordinate Axes</Label>
+                    <p className="text-[0.8rem] text-muted-foreground">Show X and Y axes</p>
+                  </div>
+                  <Switch
+                    id="showAxes"
+                    checked={practiceOptions.showAxes}
+                    onCheckedChange={(checked) => 
+                      setPracticeOptions(prev => ({ ...prev, showAxes: checked }))
+                    }
+                  />
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="showRadiusLines">Radius Lines</Label>
+                    <p className="text-[0.8rem] text-muted-foreground">Show lines from center to points</p>
+                  </div>
+                  <Switch
+                    id="showRadiusLines"
+                    checked={practiceOptions.showRadiusLines}
+                    onCheckedChange={(checked) => 
+                      setPracticeOptions(prev => ({ ...prev, showRadiusLines: checked }))
+                    }
+                  />
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="showAdjacentLines">Height Lines</Label>
+                    <p className="text-[0.8rem] text-muted-foreground">Show vertical distance lines</p>
+                  </div>
+                  <Switch
+                    id="showAdjacentLines"
+                    checked={practiceOptions.showAdjacentLines}
+                    onCheckedChange={(checked) => 
+                      setPracticeOptions(prev => ({ ...prev, showAdjacentLines: checked }))
+                    }
+                  />
+                </div>
               </div>
             </div>
 
-            {/* Information to Test */}
-            <div>
-              <h3 className="text-sm font-semibold mb-3">Information to Test</h3>
-              <div className="space-y-3">
+            {/* Practice Values */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 border-b pb-2">
+                <Brain className="h-5 w-5 text-muted-foreground" />
+                <h3 className="font-medium">Practice Values</h3>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4 pl-7">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="showDegrees">Degrees</Label>
+                  <Label htmlFor="showDegrees" className="font-medium">Degrees</Label>
                   <Switch
                     id="showDegrees"
                     checked={practiceOptions.showDegrees}
                     onCheckedChange={(checked) => 
-                      setPracticeOptions(prev => ({ ...prev, showDegrees: checked }))
+                      handlePracticeValueToggle('showDegrees', checked)
                     }
                   />
                 </div>
+                
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="coordinates">Coordinates</Label>
+                  <Label htmlFor="coordinates" className="font-medium">Coordinates</Label>
                   <Switch
                     id="coordinates"
                     checked={practiceOptions.coordinates}
                     onCheckedChange={(checked) => 
-                      setPracticeOptions(prev => ({ ...prev, coordinates: checked }))
+                      handlePracticeValueToggle('coordinates', checked)
                     }
                   />
                 </div>
+                
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="radians">Radians</Label>
+                  <Label htmlFor="radians" className="font-medium">Radians</Label>
                   <Switch
                     id="radians"
                     checked={practiceOptions.radians}
                     onCheckedChange={(checked) => 
-                      setPracticeOptions(prev => ({ ...prev, radians: checked }))
+                      handlePracticeValueToggle('radians', checked)
                     }
                   />
                 </div>
+                
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="sine">Sine</Label>
+                  <Label htmlFor="sine" className="font-medium">Sine</Label>
                   <Switch
                     id="sine"
                     checked={practiceOptions.sine}
                     onCheckedChange={(checked) => 
-                      setPracticeOptions(prev => ({ ...prev, sine: checked }))
+                      handlePracticeValueToggle('sine', checked)
                     }
                   />
                 </div>
+                
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="cosine">Cosine</Label>
+                  <Label htmlFor="cosine" className="font-medium">Cosine</Label>
                   <Switch
                     id="cosine"
                     checked={practiceOptions.cosine}
                     onCheckedChange={(checked) => 
-                      setPracticeOptions(prev => ({ ...prev, cosine: checked }))
+                      handlePracticeValueToggle('cosine', checked)
                     }
                   />
                 </div>
+                
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="tangent">Tangent</Label>
+                  <Label htmlFor="tangent" className="font-medium">Tangent</Label>
                   <Switch
                     id="tangent"
                     checked={practiceOptions.tangent}
                     onCheckedChange={(checked) => 
-                      setPracticeOptions(prev => ({ ...prev, tangent: checked }))
+                      handlePracticeValueToggle('tangent', checked)
+                    }
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Additional Options */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 border-b pb-2">
+                <Sparkles className="h-5 w-5 text-muted-foreground" />
+                <h3 className="font-medium">Additional Options</h3>
+              </div>
+              
+              <div className="pl-7">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="showGiveUp">Show "Give Up" Option</Label>
+                    <p className="text-[0.8rem] text-muted-foreground">Display answers when stuck</p>
+                  </div>
+                  <Switch
+                    id="showGiveUp"
+                    checked={practiceOptions.showGiveUp}
+                    onCheckedChange={(checked) => 
+                      setPracticeOptions(prev => ({ ...prev, showGiveUp: checked }))
                     }
                   />
                 </div>

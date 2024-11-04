@@ -13,7 +13,7 @@ export default function Header() {
             <h1 className="text-2xl font-bold text-foreground">
               Unit Circle Practice
             </h1>
-            <span className="text-xs font-semibold text-muted-foreground ml-0.5">.tago.works</span>
+            <span className="text-xs font-semibold text-muted-foreground ml-0.5">.netlify.app</span>
           </div>
         </Link>
         <div className="flex items-center gap-4">
